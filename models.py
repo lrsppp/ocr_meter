@@ -1,5 +1,6 @@
 from pydantic import BaseModel
+from typing import Any
 
 
-class Image(BaseModel):
-    pass
+class ImageModel(BaseModel):
+    image_data: Any

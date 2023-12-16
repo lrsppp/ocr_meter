@@ -5,10 +5,13 @@ import pytesseract
 from deskew import determine_skew
 import math
 
+from const import CONFIG
 
-def resize_image(img, size=(1024, 768)):
+
+def resize_image(img: np.ndarray, size=(1024, 768)) -> np.ndarray:
     """
     :param img: Resize image to given size
+    :param size: Target size
     :return: Resized image
     """
     return cv2.resize(img, size)
@@ -98,7 +101,9 @@ def morph_rect(rect, kernel_size=(3, 3)):
     return morph_close
 
 
-def parse_rect(rect, custom_config=None):
+def extract_digit(
+    rect: np.ndarray, custom_config: (str | None) = CONFIG["custom_config"]
+) -> float:
     """
     Apply OCR using pytesseract to extract number from rectangle
 
@@ -106,14 +111,17 @@ def parse_rect(rect, custom_config=None):
     :param custom_config: Custom config passed to `pytesseract.image_to_string` function
     :return: Number
     """
-    if custom_config is None:
-        custom_config = (
-            r"--oem 1 --psm 13 -c tessedit_char_whitelist=0123456789,"  # or --psm 7
-        )
     result = pytesseract.image_to_string(rect, config=custom_config)
-    cleaned_result = re.sub(r"[^\d,\.]", "", result)
-    try:
-        num = float(cleaned_result)
-    except:
-        num = np.nan
+    cleaned_result = parse_string(result)
     return cleaned_result
+
+
+def parse_string(s: str) -> str:
+    clean_s = re.sub(r"[^\d,\.]", "", s)
+    clean_s = s.replace(",", ".")
+    try:
+        digit = float(clean_s)
+    except Exception:
+        digit = np.nan
+    finally:
+        return digit

@@ -1,3 +1,8 @@
 pytesseract
 opencv-python
 opencv-contrib-python
+pydantic
+fastapi
+numpy
+matplotlib
+uvicorn
