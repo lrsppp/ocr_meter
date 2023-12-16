@@ -1,0 +1,3 @@
+pytesseract
+opencv-python
+opencv-contrib-python
