@@ -13,6 +13,12 @@ def resize_image(img, size=(1024, 768)):
 
 
 def find_meter_rectangle(img):
+    """
+    Find meter rectangle in image.
+
+    :param: Image
+    :return: Rectangle, i.e. cropped image
+    """
     gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
     thresh = cv2.adaptiveThreshold(
         gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 51, 9
@@ -41,14 +47,29 @@ def find_meter_rectangle(img):
     return img[y : y + h, x : x + w]
 
 
-def morph_rect(img, kernel_size=(3, 3)):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGRA2GRAY)
+def morph_rect(rect, kernel_size=(3, 3)):
+    """
+    Preprocess rectangle (cropped image) using thresholding and morphological
+    transformations.
+
+    :param rect: Rectangle
+    :param kernel_size: Kernel size passed to `cv2.morphologyEx(..., kernel_size)`
+    :return: Transformed rectangle
+    """
+    gray = cv2.cvtColor(rect, cv2.COLOR_BGRA2GRAY)
     _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)
     morph_close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel_size)
     return morph_close
 
 
 def parse_rect(rect, custom_config=None):
+    """
+    Apply OCR using pytesseract to extract number from rectangle
+
+    :param rect: Rectangle
+    :param custom_config: Custom config passed to `pytesseract.image_to_string` function
+    :return: Number
+    """
     if custom_config is None:
         custom_config = r"--oem 3 --psm 11 -c tessedit_char_whitelist=0123456789"
     result = pytesseract.image_to_string(rect, config=custom_config)
