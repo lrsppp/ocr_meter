@@ -1,9 +1,8 @@
-import streamlit as st
-import requests
 import cv2
 import numpy as np
 import pandas as pd
-
+import requests
+import streamlit as st
 from const import API_URL
 
 

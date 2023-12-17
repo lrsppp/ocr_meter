@@ -1,16 +1,14 @@
-from const import CONFIG
-from pipeline import pipeline
-from models import ImageModel, LogConfig
-
-from logging.config import dictConfig
 import logging
-
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.templating import Jinja2Templates
+from logging.config import dictConfig
 
 import uvicorn
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 
+from ocr_meter.const import CONFIG
+from ocr_meter.models import ImageModel, LogConfig
+from ocr_meter.pipeline import pipeline
 
 dictConfig(LogConfig().model_dump())
 logger = logging.getLogger("ocr_meter")
