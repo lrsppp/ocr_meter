@@ -1,16 +1,33 @@
+[tool.poetry]
+name = "ocr-meter"
+version = "0.1"
+description = "OCR Meter"
+authors = ["Lars Poppe <no@email.de>"]
+packages = [{include = "ocr_meter"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+fastapi = "0.105.0"
+matplotlib = "3.8.2"
+opencv-python = "4.8.1.78"
+opencv-contrib-python = "4.8.1.78"
+pandas = "2.1.4"
+pydantic = "2.5.2"
+pytesseract = "0.3.10"
+pytest = "7.4.3"
+requests = "2.31.0"
+streamlit = "1.29.0"
+uvicorn = "0.24.0.post1"
+deskew = "1.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 88
-include = '\.pyi?$'
-exclude = '''
-    /(
-        \.git
-        | \.hg
-        | \.mypy_cache
-        | \.tox
-        | \.venv
-        | _build
-        | buck-out
-        | build
-        | dist
-    )/
-'''
+target-version = ['py311']
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]

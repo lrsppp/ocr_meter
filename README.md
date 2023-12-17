@@ -1,13 +1,20 @@
+# OCR-Meter
 
+Tool to extract digits from meter images.
 
+## Installation
 
-add algorithm.py
-add app.py
-add photo_parser.py (time etc)
+The package can be installed using `poetry install` or simply call `pip install .`.
 
+## Usage
 
-* Dockerfile
-    - App
-    - MongoDB
-* FastAPI App
-    - Parse Images
+The API is defined in `app.py`:
+
+```
+python app.py
+```
+
+To start the data app defined in `stream.py` run:
+```
+streamlit run stream.py
+```
