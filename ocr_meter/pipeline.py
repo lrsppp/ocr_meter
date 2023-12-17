@@ -3,9 +3,13 @@ from typing import Any
 import numpy as np
 
 from ocr_meter.models import ImageModel
-from ocr_meter.preprocessing import (deskew_image, extract_digit,
-                                     find_meter_rectangle, morph_rect,
-                                     resize_image)
+from ocr_meter.preprocessing import (
+    deskew_image,
+    extract_digit,
+    find_meter_rectangle,
+    morph_rect,
+    resize_image,
+)
 
 
 def pipeline(image_model: ImageModel, config: dict[str, Any]) -> float:
