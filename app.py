@@ -1,14 +1,20 @@
 from const import CONFIG
 from pipeline import pipeline
-from models import ImageModel
+from models import ImageModel, LogConfig
 
-from fastapi import FastAPI, HTTPException, Request, File, UploadFile
+from logging.config import dictConfig
+import logging
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-import cv2
-import numpy as np
+import uvicorn
 
+
+dictConfig(LogConfig().model_dump())
+logger = logging.getLogger("ocr_meter")
+logger.info("Logging configured successfully on startup")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -20,14 +26,17 @@ async def read_root(request: Request):
 
 
 @app.post("/upload-image")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(image_data: dict):
     try:
-        contents = await file.read()
-        data = np.frombuffer(contents, np.uint8)
-        image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+        image_data = image_data.get("image_data")
+        image_model = ImageModel(image_data=image_data)
 
-        image_model = ImageModel(image_data=image.tolist())
+        logger.info("File uploaded.")
         digit = pipeline(image_model=image_model, config=CONFIG)
-        return JSONResponse(content={"file_name": file.filename, "digit": digit})
+        return JSONResponse(content={"digit": digit})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="localhost", port=8002)

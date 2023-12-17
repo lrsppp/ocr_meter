@@ -6,3 +6,4 @@ fastapi
 numpy
 matplotlib
 uvicorn
+streamlit
