@@ -1,10 +1,17 @@
+from pathlib import Path
 from typing import Any
 
+import cv2
 from pydantic import BaseModel
 
 
 class ImageModel(BaseModel):
     image_data: Any
+
+    @classmethod
+    def from_png(cls, path: (Path | str)):
+        data = cv2.imread(path)
+        return ImageModel(image_data=data.tolist())
 
 
 class LogConfig(BaseModel):
