@@ -10,9 +10,11 @@ CONFIG = {
 }
 
 API_PORT = 8000
+API_HOST = "fastapi"
+
 if os.environ.get("DOCKER_CONTAINER"):
     # Use host.docker.internal when running in Docker
-    API_URL = f"http://host.docker.internal:{API_PORT}/upload-image"
+    API_URL = f"http://{API_HOST}:{API_PORT}/upload-image"
 else:
     # Use localhost when running locally
     API_URL = f"http://localhost:{API_PORT}/upload-image"

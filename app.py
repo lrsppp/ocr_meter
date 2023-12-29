@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from logging.config import dictConfig
 
 import uvicorn
@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from ocr_meter.const import API_PORT, CONFIG
+from ocr_meter.const import API_HOST, API_PORT, CONFIG
 from ocr_meter.models import ImageModel, LogConfig
 from ocr_meter.pipeline import pipeline
 
@@ -39,6 +39,6 @@ async def upload_image(image_data: dict):
 
 if __name__ == "__main__":
     if os.environ.get("DOCKER_CONTAINER"):
-        uvicorn.run(app, host="0.0.0.0", port=API_PORT)
+        uvicorn.run(app, host=API_HOST, port=API_PORT)
     else:
         uvicorn.run(app, host="localhost", port=API_PORT)

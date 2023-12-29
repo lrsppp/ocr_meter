@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
-from const import API_URL
+
+from ocr_meter.const import API_URL
 
 
 @st.cache_data
@@ -16,8 +17,8 @@ st.title("OCR Meter")
 st.markdown(
     "### Instructions\n"
     "1. Upload a PNG file by using the file uploader.\n"
-    "2. View the result in the table below."
-    "3. Export files"
+    "2. View the result in the table below.\n"
+    "3. Export CSV"
 )
 
 # Initialize Table
@@ -51,7 +52,6 @@ if uploaded_file is not None:
     response = requests.post(API_URL, json=image_data)
     if response.status_code == 200:
         result = response.json()
-        st.text("Updated Table")
         st.session_state.df = pd.concat(
             [
                 st.session_state.df,
