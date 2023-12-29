@@ -31,3 +31,23 @@ class ImageProcessor:
         for step_func, step_params in self.pipeline:
             image = step_func(image, **step_params)
         return image
+
+
+# class ImageEvaluator:
+#     def __init__(self, pipelines: List[List[Tuple[callable, Dict[str, Any]]]]):
+#         self.pipelines = pipelines
+#         self.processors = [ImageProcessor(pipeline) for pipeline in self.pipelines]
+
+#     def evaluate(self, X: List[Any], y: List[Any]):
+#         results = []
+#         for processor in self.processors:
+#             y_pred = []
+#             for x_ in X:
+#                 y_pred.append(processor.process(x_))
+
+#             results.append((y_pred, X, y, processor.pipeline))
+#         return results
+
+
+# def create_pipeline_grid(pipeline: List[Tuple[callable, Dict[str, Any]]]):
+#     pass
