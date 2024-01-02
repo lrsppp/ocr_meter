@@ -1,105 +1,66 @@
-import math
 import re
 
 import cv2
 import numpy as np
 import pytesseract
-from deskew import determine_skew
 
 from ocr_meter.const import CONFIG
 
 
-def resize_image(img: np.ndarray, size=(1024, 768)) -> np.ndarray:
+def add_contours(
+    img: np.ndarray,
+    mode: int = cv2.RETR_EXTERNAL,
+    method: int = cv2.CHAIN_APPROX_SIMPLE,
+) -> np.ndarray:
     """
-    :param img: Resize image to given size
-    :param size: Target size
-    :return: Resized image
+    Add contours to the input image.
+
+    :param img: Input image
+    :param mode: Retrieval mode for findContours function (default: cv2.RETR_EXTERNAL)
+    :param method: Approximation method for findContours function (default: cv2.CHAIN_APPROX_SIMPLE)
+    :return: Image with added contours
     """
-    return cv2.resize(img, size)
-
-
-def find_meter_rectangle(img):
-    """
-    Find meter rectangle in image.
-
-    :param: Image
-    :return: Rectangle, i.e. cropped image
-    """
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    thresh = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 51, 9
-    )
-
-    # Fill rectangular contours
-    cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cv2.findContours(img, mode, method)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     for c in cnts:
-        cv2.drawContours(thresh, [c], -1, (255, 255, 255), -1)
+        cv2.drawContours(img, [c], -1, (255, 255, 255), -1)
+    return img
 
-    # Morph open
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (6, 6))
-    opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=7)
 
-    # Draw rectangles
-    cnts = cv2.findContours(opening, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+def get_largest_rectangle(
+    img: np.ndarray, img_orig: np.ndarray | None = None
+) -> tuple[int, int, int, int]:
+    """
+    Get the coordinates of the largest rectangle in the image.
+
+    :param img: Input image
+    :param img_orig: Original image (default: None)
+    :return: Coordinates of the largest rectangle (x, y, w, h)
+    """
+    cnts = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-
     coords = []
     for c in cnts:
         x_, y_, w_, h_ = cv2.boundingRect(c)
         coords.append((x_, y_, w_, h_))
 
     x, y, w, h = coords[np.argmax([c[2] * c[3] for c in coords])]
-    return img[y : y + h, x : x + w]
+    return x, y, w, h
 
 
-def rotate(image, angle, background):
-    old_width, old_height = image.shape[:2]
-    angle_radian = math.radians(angle)
-    width = abs(np.sin(angle_radian) * old_height) + abs(
-        np.cos(angle_radian) * old_width
-    )
-    height = abs(np.sin(angle_radian) * old_width) + abs(
-        np.cos(angle_radian) * old_height
-    )
-
-    image_center = tuple(np.array(image.shape[1::-1]) / 2)
-    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-    rot_mat[1, 2] += (width - old_width) / 2
-    rot_mat[0, 2] += (height - old_height) / 2
-    return cv2.warpAffine(
-        image, rot_mat, (int(round(height)), int(round(width))), borderValue=background
-    )
-
-
-def deskew_image(img):
-    grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    angle = determine_skew(grayscale)
-    rotated = rotate(img, angle, (0, 0, 0))
-    return rotated
-
-
-def morph_rect(rect, kernel_size=(3, 3)):
+def resize_by_scale(
+    img: np.ndarray, w_scale: int = 32, h_scale: int = 32
+) -> np.ndarray:
     """
-    Preprocess rectangle (cropped image) using thresholding and morphological
-    transformations.
+    Resize the image by a given scale.
 
-    See also: https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html
-
-    :param rect: Rectangle
-    :param kernel_size: Kernel size passed to `cv2.morphologyEx(..., kernel_size)`
-    :return: Transformed rectangle
+    :param img: Input image
+    :param w_scale: Width scale factor (default: 32)
+    :param h_scale: Height scale factor (default: 32)
+    :return: Resized image
     """
-    (h, w) = rect.shape[:2]
-    rect = cv2.resize(rect, (w * 32, h * 32))
-    gray = cv2.cvtColor(rect, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (0, 0), sigmaX=10, sigmaY=10)
-    gray = cv2.erode(gray, None, iterations=20)
-    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)[1]
-    # thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    morph_close = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, (15, 15))
-    morph_close = cv2.bitwise_not(morph_close)
-    return morph_close
+    (h, w) = img.shape[:2]
+    return cv2.resize(img, (w * w_scale, h * h_scale))
 
 
 def extract_digit(
@@ -117,7 +78,13 @@ def extract_digit(
     return cleaned_result
 
 
-def parse_string(s: str) -> str:
+def parse_string(s: str) -> float:
+    """
+    Parse a string and convert it to a float.
+
+    :param s: Input string
+    :return: Parsed float value
+    """
     clean_s = re.sub(r"[^\d,\.]", "", s)
     clean_s = s.replace(",", ".")
     try:
